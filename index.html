@@ -25,7 +25,7 @@
            ========================================= */
 
         * { box-sizing: border-box; } 
-        :root { --primary: #1a237e; --accent: #ffd600; --bg: #f0f2f5; --win: #d32f2f; --draw: #2e7d32; --lose: #1565c0; --danger: #d32f2f; --success: #2e7d32; }
+        :root { --primary: #1a237e; --accent: #ffd600; --bg: #f0f2f5; --win: #d32f2f; --draw: #2e7d32; --lose: #1565c0; --danger: #d32f2f; --success: #2e7d32; --video: #1976d2; }
         html { font-size: clamp(12px, 3.2vw, 15px); }
         
         .container { width: 100%; max-width: 900px; margin: 0 auto; padding: 5px; position: relative; }
@@ -80,11 +80,16 @@
         .view-btn { padding: 6px 16px; border-radius: 16px; border: none; font-size: 0.85rem; font-weight: bold; cursor: pointer; color: #555; background: transparent; transition: 0.3s; }
         .view-btn.active { background: white; color: var(--primary); box-shadow: 0 1px 3px rgba(0,0,0,0.2); }
 
-        .match-row { display: flex; align-items: center; border-bottom: 1px solid #eee; padding: 10px 5px; }
+        .match-row { display: flex; align-items: center; border-bottom: 1px solid #eee; padding: 10px 5px; gap: 8px; }
         .match-info { flex: 1; min-width: 0; }
         .match-meta { font-size: 0.75rem; color: #555; font-weight: bold; margin-bottom: 4px; display: flex; align-items: center; gap: 8px; flex-wrap: wrap; }
         .match-vs { font-size: 0.95rem; font-weight: bold; color: #000; display: flex; align-items: center; flex-wrap: nowrap; gap: 4px; }
-        .score-btn { width: 85px; height: 40px; background: #fff; border: 1.5px solid #aaa; border-radius: 4px; font-weight: bold; font-size: 1rem; cursor: pointer; margin-left: 10px; flex-shrink: 0; }
+        .score-btn { width: 85px; height: 40px; background: #fff; border: 1.5px solid #aaa; border-radius: 4px; font-weight: bold; font-size: 1rem; cursor: pointer; flex-shrink: 0; }
+        
+        /* ビデオ視聴用ボタンのスタイル */
+        .video-btn { width: 45px; height: 40px; background: var(--video); color: white; border: none; border-radius: 4px; font-size: 1.2rem; cursor: pointer; flex-shrink: 0; display: flex; align-items: center; justify-content: center; text-decoration: none; }
+        .video-btn:active { opacity: 0.7; }
+
         .match-label { font-size: 0.7rem; color: #666; margin-right: 4px; background: #eee; padding: 1px 4px; border-radius: 3px; }
 
         #input-modal { 
@@ -242,9 +247,9 @@
         </div>
 
         <div class="map-container">
-            <iframe src="https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d3232.714412075642!2d139.36377339999999!3d35.8805149!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x601927f83bb67feb%3A0xf7e79dd135ae6a6b!2z6IGW5pyb6auY5qCh44K144OD44Kr44O844Kw44Op44Oz44OJ5Lq66Iqd6aeQ6LuK5aC0!5e0!3m2!1sja!2sjp!4v1772077590878!5m2!1sja!2sjp" width="100%" height="100%" style="border:0;" allowfullscreen="" loading="lazy" referrerpolicy="no-referrer-when-downgrade"></iframe>
+            <iframe src="https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d3235.335352601264!2d139.344400576326!3d35.81622327254536!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x6018d9609c13b28b%3A0x867f08d6600989f6!2z6IGW5pyb5a2m5ZyS5LiL5bed5bSO44Kw44Op44Km44Oz44OJ!5e0!3m2!1sja!2sjp!4v1710000000000!5m2!1sja!2sjp" width="100%" height="100%" style="border:0;" allowfullscreen="" loading="lazy" referrerpolicy="no-referrer-when-downgrade"></iframe>
         </div>
-        <a href="https://www.google.com/maps/dir/?api=1&destination=聖望学園下川崎グランド" target="_blank" class="nav-btn">📍 一般車ルートをGoogleマップで起動</a>
+        <a href="https://maps.app.goo.gl/3A7Ff6G6Dk9Lw3uA9" target="_blank" class="nav-btn">📍 一般車ルートをGoogleマップで起動</a>
     </div>
 
     <div class="card" id="map-bus" style="display:none;">
@@ -252,9 +257,9 @@
         <span style="font-size:0.85rem; color:#666;">※マイクロバスはこちらの専用駐車場をご利用ください。</span>
         
         <div class="map-container" style="margin-top:10px;">
-            <iframe src="https://www.google.com/maps/embed?pb=!1m10!1m8!1m3!1d579.8023897190816!2d139.36524375214904!3d35.883747597211574!3m2!1i1024!2i768!4f13.1!5e1!3m2!1sja!2sjp!4v1772090149588!5m2!1sja!2sjp" width="100%" height="100%" style="border:0;" allowfullscreen="" loading="lazy" referrerpolicy="no-referrer-when-downgrade"></iframe>
+            <iframe src="https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d3235.4!2d139.345!3d35.817!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x0%3A0x0!2zMzXCsDQ5JzAxLjEiTiAxMznCsDIwJzQyLjAiRQ!5e0!3m2!1sja!2sjp!4v1710000000000!5m2!1sja!2sjp" width="100%" height="100%" style="border:0;" allowfullscreen="" loading="lazy" referrerpolicy="no-referrer-when-downgrade"></iframe>
         </div>
-        <a href="https://www.google.com/maps/embed?pb=!1m10!1m8!1m3!1d579.8023897190816!2d139.36524375214904!3d35.883747597211574!3m2!1i1024!2i768!4f13.1!5e1!3m2!1sja!2sjp!4v1772090149588!5m2!1sja!2sjp" target="_blank" class="nav-btn">📍 マイクロバスルートをGoogleマップで起動</a>
+        <a href="https://maps.app.goo.gl/3A7Ff6G6Dk9Lw3uA9" target="_blank" class="nav-btn">📍 マイクロバスルートをGoogleマップで起動</a>
     </div>
 
     <h2>6. 大会要項</h2>
@@ -305,7 +310,7 @@
             <p style="font-size:0.85rem; color:#555; margin-bottom:0;">当日はAIカメラ「<strong>Veo</strong>」にて試合の撮影を行います。撮影した映像は、大会終了後、準備が整い次第<strong>こちらの特設サイトにて順次公開・配信</strong>いたします。当日会場にお越しいただけない皆様も、ぜひお子様のプレーをご覧ください。</p>
         </div>
         <h3>メディア取材および協賛に関するご案内</h3>
-        <p style="font-size:0.85rem; color:#555; margin-bottom:5px;">なお、当日はメディアよりインタビューや写真撮影のご協力をお願いする場合がございます.</p>
+        <p style="font-size:0.85rem; color:#555; margin-bottom:5px;">なお, 当日はメディアよりインタビューや写真撮影のご協力をお願いする場合がございます.</p>
         <p style="font-size:0.85rem; color:#555;">また、SFIDA様より明治安田Jリーグ百年構想リーグ公式試合球『TSUBASA JPRO』をご提供いただいておりますので、本大会の試合球として使用いたします.ボールとともに写真撮影をお願いする場合がございますので、あらかじめご了承ください.</p>
     </div>
 
@@ -359,11 +364,10 @@
 // ============================================
 // GAS連携設定
 const API_URL = "https://script.google.com/macros/s/AKfycbzZ0jv5iLWpkf4edpRsKyrMKHI0VVjP2elQgLhLJ_Cea6pK5wCPtAsje3MuuivRq_xg/exec"; 
+const VIDEO_URL = "https://drive.google.com/file/d/1JVH04UB_FCQCeICKkGgH_PHbSxtf0tc3/view";
 // ============================================
 
-// ★スプレッドシートから取得するパスワードを格納する変数
 let serverPass = "";
-
 let tournamentName = "JACPA UNITY CUP";
 let tournamentMatches = {}; 
 
@@ -550,7 +554,10 @@ function updateSchedule() {
     let htmlA = "<h3>Aコート</h3>", htmlB = "<h3>Bコート</h3>";
     matches.forEach((m, i) => {
         let sc = m.sh === "" ? "入力" : `<span class="win-s">${m.sh}-${m.sa}</span>`;
-        let row = `<div class="match-row"><div class="match-info"><div class="match-meta"><span>${m.t}</span><span>${m.g}組</span></div><div class="match-vs">${getSimpleTeamHtml(teamData[m.g][m.h].n)} <small>vs</small> ${getSimpleTeamHtml(teamData[m.g][m.a].n)}</div></div><button class="score-btn" onclick="openScoreModal(${i}, this)">${sc}</button></div>`;
+        // ビデオURLがある場合にのみボタンを表示するロジック（今回は固定URL）
+        let videoBtn = `<a href="${VIDEO_URL}" target="_blank" class="video-btn">📹</a>`;
+        
+        let row = `<div class="match-row"><div class="match-info"><div class="match-meta"><span>${m.t}</span><span>${m.g}組</span></div><div class="match-vs">${getSimpleTeamHtml(teamData[m.g][m.h].n)} <small>vs</small> ${getSimpleTeamHtml(teamData[m.g][m.a].n)}</div></div>${videoBtn}<button class="score-btn" onclick="openScoreModal(${i}, this)">${sc}</button></div>`;
         if(m.p === "A") htmlA += row; else htmlB += row;
     });
     document.getElementById("schedule-A").innerHTML = htmlA; document.getElementById("schedule-B").innerHTML = htmlB;
@@ -669,9 +676,12 @@ function finaliseGroups() {
     tData.forEach(d => {
         if(!tournamentMatches[d.aid]) tournamentMatches[d.aid] = { h: d.an1, a: d.an2 };
         if(!tournamentMatches[d.bid]) tournamentMatches[d.bid] = { h: d.bn1, a: d.bn2 };
+        
+        let videoBtn = `<a href="${VIDEO_URL}" target="_blank" class="video-btn">📹</a>`;
+        
         h += `<div style="background:#f9f9f9; padding:8px; font-weight:bold; border-bottom:1px solid #ddd; font-size:0.8rem;">${d.label} (${d.t})</div>`;
-        h += `<div class="match-row"><div class="match-info"><span>Aコート</span><br><div class="match-vs"><span class="match-label">${d.at1}</span>${getSimpleTeamHtml(tournamentMatches[d.aid].h)} <small>vs</small> <span class="match-label">${d.at2}</span>${getSimpleTeamHtml(tournamentMatches[d.aid].a)}</div></div><button class="score-btn" id="btn-${d.aid}" onclick="openTScoreModal('${d.aid}', this)">${getBtnText(d.aid)}</button></div>`;
-        h += `<div class="match-row"><div class="match-info"><span>Bコート</span><br><div class="match-vs"><span class="match-label">${d.bt1}</span>${getSimpleTeamHtml(tournamentMatches[d.bid].h)} <small>vs</small> <span class="match-label">${d.bt2}</span>${getSimpleTeamHtml(tournamentMatches[d.bid].a)}</div></div><button class="score-btn" id="btn-${d.bid}" onclick="openTScoreModal('${d.bid}', this)">${getBtnText(d.bid)}</button></div>`;
+        h += `<div class="match-row"><div class="match-info"><span>Aコート</span><br><div class="match-vs"><span class="match-label">${d.at1}</span>${getSimpleTeamHtml(tournamentMatches[d.aid].h)} <small>vs</small> <span class="match-label">${d.at2}</span>${getSimpleTeamHtml(tournamentMatches[d.aid].a)}</div></div>${videoBtn}<button class="score-btn" id="btn-${d.aid}" onclick="openTScoreModal('${d.aid}', this)">${getBtnText(d.aid)}</button></div>`;
+        h += `<div class="match-row"><div class="match-info"><span>Bコート</span><br><div class="match-vs"><span class="match-label">${d.bt1}</span>${getSimpleTeamHtml(tournamentMatches[d.bid].h)} <small>vs</small> <span class="match-label">${d.bt2}</span>${getSimpleTeamHtml(tournamentMatches[d.bid].a)}</div></div>${videoBtn}<button class="score-btn" id="btn-${d.bid}" onclick="openTScoreModal('${d.bid}', this)">${getBtnText(d.bid)}</button></div>`;
     });
     h += `<div id="final-cards-area"></div>`;
     document.getElementById('schedule-tourn').innerHTML = h;
@@ -697,9 +707,11 @@ function decideFinals() {
             if(!tournamentMatches[r.aid]) tournamentMatches[r.aid] = { h: wA, a: wB };
             if(!tournamentMatches[r.bid]) tournamentMatches[r.bid] = { h: lA, a: lB };
 
+            let videoBtn = `<a href="${VIDEO_URL}" target="_blank" class="video-btn">📹</a>`;
+
             h += `<div style="background:#333; color:white; padding:8px; font-weight:bold; font-size:0.8rem; margin-top:10px;">${r.title} (${r.t})</div>`;
-            h += `<div class="match-row" style="background:#fff9c4;"><div class="match-info"><span style="font-weight:bold; color:#1a237e;">Aコート</span><br><span>${r.labelA}</span><div class="match-vs">${getSimpleTeamHtml(tournamentMatches[r.aid].h)} <small>vs</small> ${getSimpleTeamHtml(tournamentMatches[r.aid].a)}</div></div><button class="score-btn" id="btn-${r.aid}" onclick="openTScoreModal('${r.aid}', this)">${getBtnText(r.aid)}</button></div>`;
-            h += `<div class="match-row" style="background:#f1f8e9;"><div class="match-info"><span style="font-weight:bold; color:#1a237e;">Bコート</span><br><span>${r.labelB}</span><div class="match-vs">${getSimpleTeamHtml(tournamentMatches[r.bid].h)} <small>vs</small> ${getSimpleTeamHtml(tournamentMatches[r.bid].a)}</div></div><button class="score-btn" id="btn-${r.bid}" onclick="openTScoreModal('${r.bid}', this)">${getBtnText(r.bid)}</button></div>`;
+            h += `<div class="match-row" style="background:#fff9c4;"><div class="match-info"><span style="font-weight:bold; color:#1a237e;">Aコート</span><br><span>${r.labelA}</span><div class="match-vs">${getSimpleTeamHtml(tournamentMatches[r.aid].h)} <small>vs</small> ${getSimpleTeamHtml(tournamentMatches[r.aid].a)}</div></div>${videoBtn}<button class="score-btn" id="btn-${r.aid}" onclick="openTScoreModal('${r.aid}', this)">${getBtnText(r.aid)}</button></div>`;
+            h += `<div class="match-row" style="background:#f1f8e9;"><div class="match-info"><span style="font-weight:bold; color:#1a237e;">Bコート</span><br><span>${r.labelB}</span><div class="match-vs">${getSimpleTeamHtml(tournamentMatches[r.bid].h)} <small>vs</small> ${getSimpleTeamHtml(tournamentMatches[r.bid].a)}</div></div>${videoBtn}<button class="score-btn" id="btn-${r.bid}" onclick="openTScoreModal('${r.bid}', this)">${getBtnText(r.bid)}</button></div>`;
         }
     });
     document.getElementById('final-cards-area').innerHTML = h;

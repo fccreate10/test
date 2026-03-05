@@ -86,7 +86,7 @@
         .match-vs { font-size: 0.95rem; font-weight: bold; color: #000; display: flex; align-items: center; flex-wrap: nowrap; gap: 4px; }
         .score-btn { width: 85px; height: 40px; background: #fff; border: 1.5px solid #aaa; border-radius: 4px; font-weight: bold; font-size: 1rem; cursor: pointer; flex-shrink: 0; }
         
-        /* 試合動画ボタン */
+        /* 試合動画ボタンのスタイル修正（紺色背景・アイコンなし） */
         .video-btn { 
             padding: 8px 12px; 
             background: var(--video); 
@@ -181,18 +181,15 @@
         .veo-info { border: 2px solid #000; padding: 15px; border-radius: 8px; background: #f9f9f9; margin-top: 15px; }
         .veo-badge { display: inline-block; background: #000; color: #fff; padding: 2px 8px; border-radius: 4px; font-weight: bold; font-size: 0.8rem; margin-bottom: 8px; }
 
-        /* ▼▼▼ 動画ポップアップ用スタイル ▼▼▼ */
+        /* ▼▼▼ 動画ポップアップ（iframe埋め込み用）スタイル ▼▼▼ */
         #video-modal-overlay { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.8); z-index: 60000; }
-        #video-modal { display: none; position: fixed; top: 50%; left: 50%; transform: translate(-50%, -50%); width: 95%; max-width: 800px; background: #000; border-radius: 12px; z-index: 60001; padding: 10px; box-shadow: 0 10px 40px rgba(0,0,0,0.5); }
-        #video-modal video { width: 100%; display: block; border-radius: 4px; }
+        #video-modal { display: none; position: fixed; top: 50%; left: 50%; transform: translate(-50%, -50%); width: 95%; max-width: 800px; background: #000; border-radius: 8px; z-index: 60001; padding: 10px; box-shadow: 0 10px 40px rgba(0,0,0,0.5); }
         
-        /* ネジマーク（設定）とダウンロードを隠すCSS */
-        video::-webkit-media-controls-settings-button { display: none !important; }
-        video::-internal-media-controls-download-button { display: none !important; }
-        video::-webkit-media-controls-enclosure { overflow: hidden !important; }
+        /* 16:9の比率を保つためのコンテナ */
+        .iframe-container { position: relative; width: 100%; padding-bottom: 56.25%; height: 0; overflow: hidden; border-radius: 4px; background: #222; }
+        .iframe-container iframe { position: absolute; top: 0; left: 0; width: 100%; height: 100%; border: none; }
 
-        .video-close-btn { position: absolute; top: -40px; right: 0; color: white; background: none; border: none; font-size: 1.2rem; cursor: pointer; font-weight: bold; }
-        .pip-trigger-btn { width: 100%; margin-top: 10px; padding: 12px; background: #1a73e8; color: white; border: none; border-radius: 6px; font-size: 1rem; font-weight: bold; cursor: pointer; }
+        .video-close-btn { position: absolute; top: -35px; right: 0; color: white; background: none; border: none; font-size: 1.2rem; cursor: pointer; font-weight: bold; }
         /* ▲▲▲ 修正終了 ▲▲▲ */
     </style>
 </head>
@@ -201,10 +198,9 @@
 <div id="video-modal-overlay" onclick="closeVideoModal()"></div>
 <div id="video-modal">
     <button class="video-close-btn" onclick="closeVideoModal()">✕ 閉じる</button>
-    <video id="player-core" controls crossorigin="anonymous" playsinline controlsList="nodownload noplaybackrate">
-        <source src="" type="video/mp4">
-    </video>
-    <button class="pip-trigger-btn" onclick="triggerPiP()">ポップアップ(PiP)で外に出す</button>
+    <div class="iframe-container">
+        <iframe id="player-iframe" src="" allow="autoplay"></iframe>
+    </div>
 </div>
 <div id="loading-mini">
     <div class="spinner-mini"></div>
@@ -402,16 +398,20 @@
 // GAS連携設定
 const API_URL = "https://script.google.com/macros/s/AKfycbzZ0jv5iLWpkf4edpRsKyrMKHI0VVjP2elQgLhLJ_Cea6pK5wCPtAsje3MuuivRq_xg/exec"; 
 
-// ▼▼▼ 動画ID・URL設定 ▼▼▼
+// ▼▼▼ 動画ID・URL設定 (iframeのプレビュー用URLに変更) ▼▼▼
 const VIDEO_FILE_ID = "1JVH04UB_FCQCeICKkGgH_PHbSxtf0tc3";
-const VIDEO_SRC_URL = `https://drive.google.com/uc?export=download&id=${VIDEO_FILE_ID}`;
+const VIDEO_SRC_URL = `https://drive.google.com/file/d/${VIDEO_FILE_ID}/preview`;
 // ============================================
 
 let serverPass = "";
 let tournamentName = "JACPA UNITY CUP";
 let tournamentMatches = {}; 
 
-function convertGD(url) { if (!url) return ""; const match = url.match(/\/d\/(.+?)\//); return match ? `https://drive.google.com/thumbnail?id=${match[1]}&sz=w200` : url; }
+function convertGD(url) { 
+    if (!url) return ""; 
+    const match = url.match(/\/d\/(.+?)\//); 
+    return match ? `https://drive.google.com/thumbnail?id=${match[1]}&sz=w200` : url; 
+}
 
 function getSimpleTeamHtml(teamName) {
     let logo = "";
@@ -442,14 +442,14 @@ let matches = [
 let finalRanks = { A:[], B:[], C:[], D:[] }, tScores = {}, currentAction = "", currentIndex = null;
 
 
-// ▼▼▼ 動画ポップアップ制御ロジック ▼▼▼
+// ▼▼▼ 動画ポップアップ制御ロジック (iframe版) ▼▼▼
 function openVideoModal() {
     const modal = document.getElementById('video-modal');
     const overlay = document.getElementById('video-modal-overlay');
-    const player = document.getElementById('player-core');
+    const player = document.getElementById('player-iframe');
     
-    // 動画のソースをセット
-    player.src = VIDEO_SRC_URL;
+    // iframeにGoogle DriveのプレビューURLをセット
+    player.src = VIDEO_SRC_URL; 
     modal.style.display = 'block';
     overlay.style.display = 'block';
 }
@@ -457,29 +457,12 @@ function openVideoModal() {
 function closeVideoModal() {
     const modal = document.getElementById('video-modal');
     const overlay = document.getElementById('video-modal-overlay');
-    const player = document.getElementById('player-core');
+    const player = document.getElementById('player-iframe');
     
-    player.pause();
-    player.src = "";
+    // 動画を停止して軽くするためにsrcを空にする
+    player.src = ""; 
     modal.style.display = 'none';
     overlay.style.display = 'none';
-    // もしPiP中なら解除する
-    if (document.pictureInPictureElement) {
-        document.exitPictureInPicture();
-    }
-}
-
-async function triggerPiP() {
-    const player = document.getElementById('player-core');
-    try {
-        if (player !== document.pictureInPictureElement) {
-            await player.requestPictureInPicture();
-        } else {
-            await document.exitPictureInPicture();
-        }
-    } catch (error) {
-        alert("このブラウザはポップアップ再生に対応していないか、動画が読み込まれていません。動画の再生ボタンを押してから再度お試しください。");
-    }
 }
 // ▲▲▲ 修正終了 ▲▲▲
 
@@ -637,7 +620,7 @@ function updateSchedule() {
     let htmlA = "<h3>Aコート</h3>", htmlB = "<h3>Bコート</h3>";
     matches.forEach((m, i) => {
         let sc = m.sh === "" ? "入力" : `<span class="win-s">${m.sh}-${m.sa}</span>`;
-        // 別タブを開くのではなくポップアップを呼び出すボタンに変更
+        // ビデオボタンをポップアップ呼び出しに変更
         let videoBtn = `<button onclick="openVideoModal()" class="video-btn">試合動画</button>`;
         
         let row = `<div class="match-row"><div class="match-info"><div class="match-meta"><span>${m.t}</span><span>${m.g}組</span></div><div class="match-vs">${getSimpleTeamHtml(teamData[m.g][m.h].n)} <small>vs</small> ${getSimpleTeamHtml(teamData[m.g][m.a].n)}</div></div>${videoBtn}<button class="score-btn" onclick="openScoreModal(${i}, this)">${sc}</button></div>`;
@@ -725,13 +708,19 @@ function submitModal() {
 }
 
 function calc() {
-    const res = {}; ['A','B','C','D'].forEach(g => { res[g] = teamData[g].map((t, idx) => ({ id: idx, w:0, l:0, d:0, gs:0, ga:0, pts:0, gd:0, r:["","",""] })); });
-    matches.forEach(m => { if(m.sh!=="") { 
-        const h=parseInt(m.sh), a=parseInt(m.sa); res[m.g][m.h].gs+=h; res[m.g][m.h].ga+=a; res[m.g][m.a].gs+=a; res[m.g][m.a].ga+=h;
-        if(h>a){ res[m.g][m.h].w++; res[m.g][m.h].pts+=3; res[m.g][m.a].l++; res[m.g][m.h].r[m.a]=`○${h}-${a}`; res[m.g][m.a].r[m.h]=`×${a}-${h}`; }
-        else if(h<a){ res[m.g][m.a].w++; res[m.g][m.a].pts+=3; res[m.g][m.h].l++; res[m.g][m.a].r[m.h]=`○${a}-${h}`; res[m.g][m.h].r[m.a]=`×${h}-${a}`; }
-        else { res[m.g][m.h].d++; res[m.g][m.a].d++; res[m.g][m.h].pts+=1; res[m.g][m.a].pts+=1; res[m.g][m.h].r[m.a]=`△${h}-${a}`; res[m.g][m.a].r[m.h]=`△${a}-${h}`; }
-    }});
+    const res = {}; 
+    ['A','B','C','D'].forEach(g => { 
+        res[g] = teamData[g].map((t, idx) => ({ id: idx, w:0, l:0, d:0, gs:0, ga:0, pts:0, gd:0, r:["","",""] })); 
+    });
+    matches.forEach(m => { 
+        if(m.sh!=="") { 
+            const h=parseInt(m.sh), a=parseInt(m.sa); 
+            res[m.g][m.h].gs+=h; res[m.g][m.h].ga+=a; res[m.g][m.a].gs+=a; res[m.g][m.a].ga+=h;
+            if(h>a){ res[m.g][m.h].w++; res[m.g][m.h].pts+=3; res[m.g][m.a].l++; res[m.g][m.h].r[m.a]=`○${h}-${a}`; res[m.g][m.a].r[m.h]=`×${a}-${h}`; }
+            else if(h<a){ res[m.g][m.a].w++; res[m.g][m.a].pts+=3; res[m.g][m.h].l++; res[m.g][m.a].r[m.h]=`○${a}-${h}`; res[m.g][m.h].r[m.a]=`×${h}-${a}`; }
+            else { res[m.g][m.h].d++; res[m.g][m.a].d++; res[m.g][m.h].pts+=1; res[m.g][m.a].pts+=1; res[m.g][m.h].r[m.a]=`△${h}-${a}`; res[m.g][m.a].r[m.h]=`△${a}-${h}`; }
+        }
+    });
     ['A','B','C','D'].forEach(g => {
         let sorted = [...res[g]].sort((a,b) => (b.pts - a.pts) || ((b.gs-b.ga) - (a.gs-a.ga)) || (b.gs - a.gs));
         finalRanks[g] = sorted.map(t => teamData[g][t.id].n);

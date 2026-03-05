@@ -25,7 +25,7 @@
            ========================================= */
 
         * { box-sizing: border-box; } 
-        :root { --primary: #1a237e; --accent: #ffd600; --bg: #f0f2f5; --win: #d32f2f; --draw: #2e7d32; --lose: #1565c0; --danger: #d32f2f; --success: #2e7d32; --video: #1976d2; }
+        :root { --primary: #1a237e; --accent: #ffd600; --bg: #f0f2f5; --win: #d32f2f; --draw: #2e7d32; --lose: #1565c0; --danger: #d32f2f; --success: #2e7d32; --video: #001f3f; } /* 紺色に変更 */
         html { font-size: clamp(12px, 3.2vw, 15px); }
         
         .container { width: 100%; max-width: 900px; margin: 0 auto; padding: 5px; position: relative; }
@@ -86,8 +86,23 @@
         .match-vs { font-size: 0.95rem; font-weight: bold; color: #000; display: flex; align-items: center; flex-wrap: nowrap; gap: 4px; }
         .score-btn { width: 85px; height: 40px; background: #fff; border: 1.5px solid #aaa; border-radius: 4px; font-weight: bold; font-size: 1rem; cursor: pointer; flex-shrink: 0; }
         
-        /* ビデオ視聴用ボタンのスタイル */
-        .video-btn { width: 45px; height: 40px; background: var(--video); color: white; border: none; border-radius: 4px; font-size: 1.2rem; cursor: pointer; flex-shrink: 0; display: flex; align-items: center; justify-content: center; text-decoration: none; }
+        /* 試合動画ボタンのスタイル修正（紺色背景・アイコンなし） */
+        .video-btn { 
+            padding: 8px 12px; 
+            background: var(--video); 
+            color: white; 
+            border: none; 
+            border-radius: 4px; 
+            font-size: 0.8rem; 
+            font-weight: bold;
+            cursor: pointer; 
+            flex-shrink: 0; 
+            display: flex; 
+            align-items: center; 
+            justify-content: center; 
+            text-decoration: none; 
+            white-space: nowrap;
+        }
         .video-btn:active { opacity: 0.7; }
 
         .match-label { font-size: 0.7rem; color: #666; margin-right: 4px; background: #eee; padding: 1px 4px; border-radius: 3px; }
@@ -554,8 +569,8 @@ function updateSchedule() {
     let htmlA = "<h3>Aコート</h3>", htmlB = "<h3>Bコート</h3>";
     matches.forEach((m, i) => {
         let sc = m.sh === "" ? "入力" : `<span class="win-s">${m.sh}-${m.sa}</span>`;
-        // ビデオURLがある場合にのみボタンを表示するロジック（今回は固定URL）
-        let videoBtn = `<a href="${VIDEO_URL}" target="_blank" class="video-btn">📹</a>`;
+        // ビデオボタンを「試合動画」テキストに変更
+        let videoBtn = `<a href="${VIDEO_URL}" target="_blank" class="video-btn">試合動画</a>`;
         
         let row = `<div class="match-row"><div class="match-info"><div class="match-meta"><span>${m.t}</span><span>${m.g}組</span></div><div class="match-vs">${getSimpleTeamHtml(teamData[m.g][m.h].n)} <small>vs</small> ${getSimpleTeamHtml(teamData[m.g][m.a].n)}</div></div>${videoBtn}<button class="score-btn" onclick="openScoreModal(${i}, this)">${sc}</button></div>`;
         if(m.p === "A") htmlA += row; else htmlB += row;
@@ -677,7 +692,7 @@ function finaliseGroups() {
         if(!tournamentMatches[d.aid]) tournamentMatches[d.aid] = { h: d.an1, a: d.an2 };
         if(!tournamentMatches[d.bid]) tournamentMatches[d.bid] = { h: d.bn1, a: d.bn2 };
         
-        let videoBtn = `<a href="${VIDEO_URL}" target="_blank" class="video-btn">📹</a>`;
+        let videoBtn = `<a href="${VIDEO_URL}" target="_blank" class="video-btn">試合動画</a>`;
         
         h += `<div style="background:#f9f9f9; padding:8px; font-weight:bold; border-bottom:1px solid #ddd; font-size:0.8rem;">${d.label} (${d.t})</div>`;
         h += `<div class="match-row"><div class="match-info"><span>Aコート</span><br><div class="match-vs"><span class="match-label">${d.at1}</span>${getSimpleTeamHtml(tournamentMatches[d.aid].h)} <small>vs</small> <span class="match-label">${d.at2}</span>${getSimpleTeamHtml(tournamentMatches[d.aid].a)}</div></div>${videoBtn}<button class="score-btn" id="btn-${d.aid}" onclick="openTScoreModal('${d.aid}', this)">${getBtnText(d.aid)}</button></div>`;
@@ -707,7 +722,7 @@ function decideFinals() {
             if(!tournamentMatches[r.aid]) tournamentMatches[r.aid] = { h: wA, a: wB };
             if(!tournamentMatches[r.bid]) tournamentMatches[r.bid] = { h: lA, a: lB };
 
-            let videoBtn = `<a href="${VIDEO_URL}" target="_blank" class="video-btn">📹</a>`;
+            let videoBtn = `<a href="${VIDEO_URL}" target="_blank" class="video-btn">試合動画</a>`;
 
             h += `<div style="background:#333; color:white; padding:8px; font-weight:bold; font-size:0.8rem; margin-top:10px;">${r.title} (${r.t})</div>`;
             h += `<div class="match-row" style="background:#fff9c4;"><div class="match-info"><span style="font-weight:bold; color:#1a237e;">Aコート</span><br><span>${r.labelA}</span><div class="match-vs">${getSimpleTeamHtml(tournamentMatches[r.aid].h)} <small>vs</small> ${getSimpleTeamHtml(tournamentMatches[r.aid].a)}</div></div>${videoBtn}<button class="score-btn" id="btn-${r.aid}" onclick="openTScoreModal('${r.aid}', this)">${getBtnText(r.aid)}</button></div>`;

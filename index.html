@@ -1,0 +1,750 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>JACPA UNITY CUP ポータル</title>
+    <style>
+        /* =========================================
+            ▼▼▼ 全画面スクロール対応 ▼▼▼
+           ========================================= */
+        html, body {
+            margin: 0;
+            padding: 0;
+            width: 100%;
+            overflow-x: hidden; 
+            overflow-y: auto; 
+            
+            font-family: "Helvetica Neue", Arial, sans-serif; 
+            background: var(--bg); 
+            color: #333; 
+            padding-bottom: 50px;
+        }
+        /* =========================================
+            ▲▲▲ 対策終了 ▲▲▲
+           ========================================= */
+
+        * { box-sizing: border-box; } 
+        :root { --primary: #1a237e; --accent: #ffd600; --bg: #f0f2f5; --win: #d32f2f; --draw: #2e7d32; --lose: #1565c0; --danger: #d32f2f; --success: #2e7d32; }
+        html { font-size: clamp(12px, 3.2vw, 15px); }
+        
+        .container { width: 100%; max-width: 900px; margin: 0 auto; padding: 5px; position: relative; }
+        
+        #tournament-title { 
+            color: var(--primary); 
+            padding: 20px 0; 
+            margin: 0; 
+            font-weight: bold;
+            font-size: clamp(1.5rem, 6vw, 2.5rem);
+            line-height: 1.2;
+            width: 100%;
+            word-wrap: break-word;
+            display: flex;
+            align-items: center; 
+            justify-content: center; 
+            gap: 0.5em; 
+        }
+
+        .header-logo {
+            height: 1.2em; 
+            width: auto; 
+            object-fit: contain; 
+            border-radius: 4px; 
+        }
+
+        h2 { background: var(--primary); color: white; padding: 10px; margin: 20px 0 10px; border-radius: 3px; font-size: 1.1rem; border-left: 6px solid var(--accent); font-weight: bold; }
+        h3 { color: var(--primary); border-bottom: 2px solid var(--primary); padding-bottom: 4px; margin: 15px 0 10px; font-size: 1rem; display: flex; align-items: center; }
+        h3::before { content: "●"; margin-right: 8px; font-size: 0.8rem; }
+        
+        .card { background: white; padding: 12px; border-radius: 8px; box-shadow: 0 1px 3px rgba(0,0,0,0.1); margin-bottom: 15px; overflow-x: auto; width: 100%; }
+
+        .team-cell-flex { display: flex; align-items: center; gap: 5px; }
+        .club-logo { width: 1.5rem; height: 1.5rem; object-fit: contain; flex-shrink: 0; border-radius: 2px; background: rgba(0,0,0,0.03); }
+
+        table { width: 100%; border-collapse: collapse; table-layout: fixed; background: #fff; }
+        .table-detail table { min-width: 600px; }
+        .table-simple table { min-width: 100%; }
+        .table-simple .star-col, .table-simple .star-cell, .table-simple .score-col { display: none; }
+        
+        th, td { border: 1px solid #ccc; padding: 6px 2px; text-align: center; white-space: nowrap; overflow: hidden; }
+        th { background: #e8eaed; font-size: 0.6rem; font-weight: bold; }
+        .rank-col { width: 30px; font-weight: bold; background: #f8f9fa; }
+        .team-name-col { text-align: left; font-weight: bold; font-size: 0.75rem; padding-left: 4px; }
+        .stat-col { width: 28px; font-size: 0.7rem; }
+        .star-cell { width: 50px; font-weight: bold; font-size: 0.7rem; }
+        .score-col { width: 28px; font-size: 0.65rem; background: #fdfdfe; }
+        .gd-cell { width: 32px; background: #e3f2fd; color: #0d47a1; font-weight: bold; font-size: 0.7rem; }
+        .pts-cell { width: 32px; background: #fff9c4; font-weight: bold; font-size: 0.75rem; }
+
+        .view-switch { display: flex; justify-content: center; margin-bottom: 10px; background: #ddd; padding: 4px; border-radius: 20px; width: fit-content; margin-left: auto; margin-right: auto; }
+        .view-btn { padding: 6px 16px; border-radius: 16px; border: none; font-size: 0.85rem; font-weight: bold; cursor: pointer; color: #555; background: transparent; transition: 0.3s; }
+        .view-btn.active { background: white; color: var(--primary); box-shadow: 0 1px 3px rgba(0,0,0,0.2); }
+
+        .match-row { display: flex; align-items: center; border-bottom: 1px solid #eee; padding: 10px 5px; }
+        .match-info { flex: 1; min-width: 0; }
+        .match-meta { font-size: 0.75rem; color: #555; font-weight: bold; margin-bottom: 4px; display: flex; align-items: center; gap: 8px; flex-wrap: wrap; }
+        .match-vs { font-size: 0.95rem; font-weight: bold; color: #000; display: flex; align-items: center; flex-wrap: nowrap; gap: 4px; }
+        .score-btn { width: 85px; height: 40px; background: #fff; border: 1.5px solid #aaa; border-radius: 4px; font-weight: bold; font-size: 1rem; cursor: pointer; margin-left: 10px; flex-shrink: 0; }
+        .match-label { font-size: 0.7rem; color: #666; margin-right: 4px; background: #eee; padding: 1px 4px; border-radius: 3px; }
+
+        #input-modal { 
+            display: none; position: absolute; width: 90%; max-width: 350px; background: white; 
+            border-radius: 12px; box-shadow: 0 10px 40px rgba(0,0,0,0.5); z-index: 20000; 
+            padding: 20px; text-align: center; left: 50%; transform: translateX(-50%);
+        }
+        #modal-overlay { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.6); z-index: 19999; }
+        
+        .btn-main { display: block; width: 100%; padding: 15px; background: var(--draw); color: white; border: none; border-radius: 6px; font-size: 1rem; font-weight: bold; cursor: pointer; margin-bottom: 10px; }
+        
+        .final-rank-row { display: flex; align-items: center; padding: 10px; border-bottom: 1px solid #eee; font-size: 1rem; }
+        .rank-num { width: 55px; font-weight: bold; color: var(--primary); text-align: center; }
+        .rank-name { font-weight: bold; flex: 1; }
+
+        #loading-mini {
+            position: fixed;
+            top: 15px;
+            right: 15px;
+            background: rgba(255, 255, 255, 0.95);
+            color: var(--primary);
+            padding: 8px 16px;
+            border-radius: 30px;
+            font-size: 0.8rem;
+            font-weight: bold;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            z-index: 50000;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.15);
+            transition: opacity 0.4s ease;
+        }
+        .spinner-mini { 
+            width: 14px; height: 14px; 
+            border: 2px solid #ddd; 
+            border-top: 2px solid var(--primary); 
+            border-radius: 50%; 
+            animation: spin 1s linear infinite; 
+        }
+        @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
+
+        #save-toast { display: none; position: fixed; top: 20px; left: 50%; transform: translateX(-50%); background: var(--success); color: white; padding: 12px 24px; border-radius: 50px; font-weight: bold; font-size: 1rem; z-index: 99999; box-shadow: 0 4px 15px rgba(0,0,0,0.3); white-space: nowrap; }
+
+        .product-card { border: 2px solid var(--accent); position: relative; padding-top: 25px; margin-top: 40px; overflow: visible !important; }
+        .product-badge { position: absolute; top: -12px; left: 50%; transform: translateX(-50%); background: var(--accent); color: #333; padding: 4px 15px; border-radius: 20px; font-weight: bold; font-size: 0.85rem; box-shadow: 0 2px 5px rgba(0,0,0,0.2); white-space: nowrap; z-index: 10; }
+        .product-flex { display: flex; align-items: center; gap: 15px; }
+        .p-img { width: 100px; flex-shrink: 0; text-align: center; }
+        .p-img img { width: 100%; height: auto; object-fit: contain; }
+        .p-info { flex: 1; }
+        .p-info h4 { margin: 0 0 5px 0; font-size: 1rem; color: var(--primary); }
+        .p-info p { font-size: 0.8rem; margin: 0 0 10px 0; line-height: 1.4; color: #555; }
+        .shop-btn { display: inline-block; background: #333; color: white; text-decoration: none; padding: 8px 16px; border-radius: 4px; font-size: 0.85rem; font-weight: bold; transition: 0.3s; }
+        .shop-btn:active { transform: scale(0.98); opacity: 0.9; }
+
+        .sponsor-title { font-size: 0.8rem; color: #666; text-align: center; margin: 20px 0 10px; border-bottom: 1px solid #eee; padding-bottom: 5px; }
+        .sponsor-flex { display: flex; justify-content: center; align-items: center; gap: 20px; flex-wrap: wrap; padding: 10px; }
+        .sponsor-logo { height: 50px; object-fit: contain; max-width: 100%; transition: transform 0.2s; }
+        .media-logo { height: 60px; object-fit: contain; max-width: 100%; transition: transform 0.2s; }
+        .sponsor-logo:hover, .media-logo:hover { transform: scale(1.05); opacity: 0.8; }
+
+        footer { margin-top: 10px; padding: 20px; text-align: center; font-size: 0.75rem; color: #666; border-top: 1px solid #ddd; }
+        .win-s { color: var(--win); } .draw-s { color: var(--draw); } .lose-s { color: var(--lose); }
+        #admin-config-btn { position:fixed; bottom:20px; right:20px; width:50px; height:50px; background:#333; color:white; border-radius:50%; border:none; z-index:30000; font-size:24px; cursor:pointer; opacity:0.8; }
+        
+        .text-content { font-size: 0.9rem; line-height: 1.6; }
+        ul { padding-left: 20px; margin: 5px 0; } li { margin-bottom: 6px; }
+        .important { color: var(--danger); font-weight: bold; }
+        .map-container { width: 100%; height: 350px; border-radius: 8px; overflow: hidden; border: 1px solid #ddd; margin: 10px 0; }
+        .nav-btn { display: flex; align-items: center; justify-content: center; background: #4285F4; color: white; text-decoration: none; padding: 12px; border-radius: 6px; font-weight: bold; font-size: 1rem; margin-top: 10px; }
+        
+        .parking-alert { margin: 8px 0; padding: 10px; background: #ffebee; color: #c62828; font-weight: bold; font-size: 0.85rem; border-radius: 4px; text-align: center; border: 1px solid #ffcdd2; }
+        
+        /* Veo案内用のハイライトスタイル */
+        .veo-info { border: 2px solid #000; padding: 15px; border-radius: 8px; background: #f9f9f9; margin-top: 15px; }
+        .veo-badge { display: inline-block; background: #000; color: #fff; padding: 2px 8px; border-radius: 4px; font-weight: bold; font-size: 0.8rem; margin-bottom: 8px; }
+    </style>
+</head>
+<body>
+
+<div id="loading-mini">
+    <div class="spinner-mini"></div>
+    <span>データ同期中...</span>
+</div>
+
+<div id="save-toast">✅ 確定・保存しました</div>
+
+<div class="container">
+    
+<h1 id="tournament-title">
+    <img src="https://drive.google.com/thumbnail?id=1MJrmMOriVJRdH1M7fz-FJ2f3eSogaf_J&sz=w800" alt="大会ロゴ" class="header-logo">
+    JACPA UNITY CUP U-10
+</h1>
+
+<div style="text-align: center; margin-bottom: 15px;">
+    <img src="https://drive.google.com/thumbnail?id=1NIErqFVLSTExJw7kgaj5mytrObDVlhFY&sz=w1000" alt="JACPA UNITY CUP メインバナー" style="max-width: 100%; height: auto; border-radius: 8px; box-shadow: 0 2px 5px rgba(0,0,0,0.1);">
+</div>
+
+    <div class="card" style="font-size:0.85rem; border-top: 4px solid var(--primary);">
+        <h3 style="margin-top:0;">大会の目的</h3>
+        <p style="line-height:1.6; margin:0;">本大会は「UNITY（つながり・結束）」をテーマに、日頃より関わりをいただいているチームへの感謝の気持ちを形にし、サッカーを通じた相互交流と選手育成を目的として開催する。<br>
+        選手同士が高いレベルで競い合い成長する場であると同時に、指導者同士が交流し、育成に対する考え方や指導方法を共有することで、日本のジュニアサッカーの発展に貢献していきたい。</p>
+    </div>
+
+    <h2>1. 予選リーグ結果</h2>
+    <div class="view-switch">
+        <button class="view-btn active" onclick="switchView('simple')">簡易</button>
+        <button class="view-btn" onclick="switchView('detail')">詳細</button>
+    </div>
+    <div id="league-containers"></div>
+
+    <h2>2. 予選日程・結果入力</h2>
+    <div class="card" id="schedule-A"></div>
+    <div class="card" id="schedule-B"></div>
+    <button class="btn-main" onclick="openAuthModal('reflect', this)">予選終了 ➔ トーナメント生成</button>
+
+    <h2>3. 順位決定トーナメント</h2>
+    <div id="tourn-area" class="card" style="padding:0;"><div id="schedule-tourn" style="text-align:center; padding:30px;">予選確定後に自動生成されます</div></div>
+    <button id="btn-decide-final" class="btn-main" style="display:none; background:#e65100;" onclick="openAuthModal('final', this)">準決勝終了 ➔ 最終決定戦生成</button>
+
+    <h2 id="final-rank-title" style="display:none;">4. 最終順位</h2>
+    <div id="final-rank-card" class="card" style="display:none;"></div>
+    <button id="btn-show-rank" class="btn-main" style="display:none; background:#333;" onclick="openAuthModal('ranking', this)">全試合終了 ➔ 最終順位を表示</button>
+
+    <div class="card product-card">
+        <div class="product-badge">JACPA UNITY CUP 公式試合球</div>
+        <div class="product-flex">
+            <div class="p-img">
+                <img src="https://drive.google.com/thumbnail?id=1IS-q8kE0y-D9wbQafCsnkvwKSepCS45F&sz=w800" alt="Official Match Ball">
+            </div>
+            <div class="p-info">
+                <h4>SFIDA キャプテン翼 コラボモデル</h4>
+                <p>大空翼の名言『ボールはともだち』が刻まれた、JACPA UNITY CUP 公式試合球。</p>
+                <a href="https://sfidasports.com/products/sb-26tj02?variant=48905290481901" target="_blank" class="shop-btn">公式ストアを見る ↗</a>
+            </div>
+        </div>
+    </div>
+
+    <h2>5. 会場・駐車場案内</h2>
+    <div class="view-switch">
+        <button class="view-btn active" id="btn-map-normal" onclick="switchMap('normal')">🚗 一般車</button>
+        <button class="view-btn" id="btn-map-bus" onclick="switchMap('bus')">🚌 マイクロバス</button>
+    </div>
+
+    <div class="card" id="map-normal">
+        <span style="font-size:1.1rem; font-weight:bold; color:var(--primary);">聖望学園下川崎グラウンド</span><br>
+        <span style="font-size:0.85rem; color:#666;">埼玉県飯能市大字下川崎５５３</span>
+        
+        <div class="parking-alert">
+            🚗 各チーム【最大8台まで】の来場をお願い致します。<br>
+            <hr style="border:0; border-top:1px dashed #ef9a9a; margin:8px 0;">
+            <div style="font-size:0.75rem; color:#666; font-weight:normal; text-align:left; line-height:1.4;">
+                ※ 9台以降につきましては別途臨時駐車場をご案内致します。<br>
+                ※ 駐車場内での事故、盗難、損壊、他車とのトラブルが発生した場合、一切の責任を負担しません。ご注意ください。
+            </div>
+        </div>
+
+        <div class="map-container">
+            <iframe src="https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d3232.714412075642!2d139.36377339999999!3d35.8805149!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x601927f83bb67feb%3A0xf7e79dd135ae6a6b!2z6IGW5pyb6auY5qCh44K144OD44Kr44O844Kw44Op44Oz44OJ5Lq66Iqd6aeQ6LuK5aC0!5e0!3m2!1sja!2sjp!4v1772077590878!5m2!1sja!2sjp" width="100%" height="100%" style="border:0;" allowfullscreen="" loading="lazy" referrerpolicy="no-referrer-when-downgrade"></iframe>
+        </div>
+        <a href="https://www.google.com/maps/dir/?api=1&destination=聖望学園下川崎グランド" target="_blank" class="nav-btn">📍 一般車ルートをGoogleマップで起動</a>
+    </div>
+
+    <div class="card" id="map-bus" style="display:none;">
+        <span style="font-size:1.1rem; font-weight:bold; color:var(--primary);">マイクロバス専用駐車場</span><br>
+        <span style="font-size:0.85rem; color:#666;">※マイクロバスはこちらの専用駐車場をご利用ください。</span>
+        
+        <div class="map-container" style="margin-top:10px;">
+            <iframe src="https://www.google.com/maps/embed?pb=!1m10!1m8!1m3!1d579.8023897190816!2d139.36524375214904!3d35.883747597211574!3m2!1i1024!2i768!4f13.1!5e1!3m2!1sja!2sjp!4v1772090149588!5m2!1sja!2sjp" width="100%" height="100%" style="border:0;" allowfullscreen="" loading="lazy" referrerpolicy="no-referrer-when-downgrade"></iframe>
+        </div>
+        <a href="https://www.google.com/maps/embed?pb=!1m10!1m8!1m3!1d579.8023897190816!2d139.36524375214904!3d35.883747597211574!3m2!1i1024!2i768!4f13.1!5e1!3m2!1sja!2sjp!4v1772090149588!5m2!1sja!2sjp" target="_blank" class="nav-btn">📍 マイクロバスルートをGoogleマップで起動</a>
+    </div>
+
+    <h2>6. 大会要項</h2>
+    <div class="card text-content">
+        <p style="margin-top:0;"><strong>開催日時：</strong> 2026年3月7日(土) 9:00〜17:00<br>
+        <span style="font-size:0.8rem; color:#666;">※少雨決行。豪雨、落雷などで開催が困難と判断した場合は中止とする。万が一中止の場合は大会グループLINEにて連絡を入れさせて頂きます。</span></p>
+
+        <h3>参加資格</h3>
+        <ul>
+            <li>小学生4年生以下(U-10)でのチーム構成とします。</li>
+            <li>各チームにてスポーツ安全傷害保険などに加入済みの団体の構成員であること。</li>
+        </ul>
+
+        <h3>大会形式・ルール</h3>
+        <ul>
+            <li>ゴールキーパーを含めた8人制の交流大会。日本サッカー協会ルールに準ずる。</li>
+            <li>大会参加チームは12チームとする.</li>
+            <li>予選リーグ（3チーム）、順位トーナメント（2試合）を行う.</li>
+            <li>試合時間は全試合 15分ハーフ（15分-3分-15分）で行う.</li>
+            <li>交代は自由.交代ゾーン(ベンチ前)から出入りする.</li>
+            <li>審判は各チーム帯同審判（1人制）.【前半:左側のチーム / 後半:右側のチーム】</li>
+            <li>順位決定：①勝ち点(勝3/分1/負0) ②得失点差 ③総得点 ④コイントス の順番.</li>
+            <li class="important">試合終了後のベンチへの挨拶はなしとさせて頂きます.スムーズな進行にご協力をお願い致します！</li>
+            <li class="important">ベスト４のみ本部前にて閉会式を行います.チームごとにお並びください.</li>
+        </ul>
+
+        <h3>グラウンド上での諸注意</h3>
+        <ul>
+            <li>ウォーミングアップは、指定のW-UPスペースにて行いください.</li>
+            <li>ベンチ内には選手、スタッフのみの入場とさせていただき、保護者の方の応援は指定された場所、スタンドにてお願い致します.</li>
+            <li>グラウンド内での水分補給は<span class="important">水のみ</span>となります.</li>
+            <li>グラウンド内はハイヒール等での立ち入りはご遠慮くださいますようよろしくお願い致します.</li>
+            <li>荷物置き場等は特に設置いたしませんので、貴重品等は各チームで管理するようにして下さい.（盗難等の被害につきましても、クラブは一切責任を負いません）</li>
+            <li>大会期間中に出るごみの処理は各自でお持ち帰りください.(特にカン、ペットボトル等)</li>
+        </ul>
+
+        <h3>肖像権に関する同意について</h3>
+        <p style="font-size:0.85rem; color:#555; margin-bottom:5px;">大会・イベント中に撮影された写真や映像については、以下の目的に限り、使用させていただく場合がございます.つきましては、肖像権使用に関してご同意いただきたくお願い申し上げます.</p>
+        <ul style="font-size:0.85rem; color:#555;">
+            <li>株式会社ジャクパの広報活動(公式ホームページ、SNS、広報誌等)</li>
+            <li>募集チラシ、パンフレット等の印刷物</li>
+            <li>クラブ内での掲示物や報告資料 等</li>
+        </ul>
+
+        <div class="veo-info">
+            <span class="veo-badge">VIDEO DELIVERY</span>
+            <h3>試合映像の配信について</h3>
+            <p style="font-size:0.85rem; color:#555; margin-bottom:0;">当日はAIカメラ「<strong>Veo</strong>」にて試合の撮影を行います。撮影した映像は、大会終了後、準備が整い次第<strong>こちらの特設サイトにて順次公開・配信</strong>いたします。当日会場にお越しいただけない皆様も、ぜひお子様のプレーをご覧ください。</p>
+        </div>
+        <h3>メディア取材および協賛に関するご案内</h3>
+        <p style="font-size:0.85rem; color:#555; margin-bottom:5px;">なお、当日は「超ワールドサッカー」様よりインタビューや写真撮影のご協力をお願いする場合がございます.</p>
+        <p style="font-size:0.85rem; color:#555;">また、SFIDA様より明治安田Jリーグ百年構想リーグ公式試合球『TSUBASA JPRO』をご提供いただいておりますので、本大会の試合球として使用いたします.ボールとともに写真撮影をお願いする場合がございますので、あらかじめご了承ください.</p>
+    </div>
+
+    <div class="card" style="text-align:center;">
+        <div class="sponsor-title">Sponsored by</div>
+        <div class="sponsor-flex">
+            <a href="https://sfidasports.com/" target="_blank">
+                <img src="https://drive.google.com/thumbnail?id=100D9cNGXXX8-fqqMCgHNe9fU990yvvWh&sz=w600" class="sponsor-logo" alt="SFIDA">
+            </a>
+            <a href="https://corp.mizuno.com/jp" target="_blank">
+                <img src="https://drive.google.com/thumbnail?id=1VhwGaOdXYvkih8zM52ilBgfWmuGIhcoD&sz=w600" class="sponsor-logo" alt="MIZUNO">
+            </a>
+            <a href="https://www.zamst-online.jp/" target="_blank">
+                <img src="https://drive.google.com/thumbnail?id=1NrwQQGgfTbZya8bdLVjwS6kImouNX7DJ&sz=w600" class="sponsor-logo" alt="ZAMST">
+            </a>
+            <a href="https://www.smbc.co.jp/" target="_blank">
+                <img src="https://drive.google.com/thumbnail?id=1aEytKHDFG6gg7TjA7Gfe9UKR00fC3V3P&sz=w600" class="sponsor-logo" alt="SMBC">
+            </a>
+        </div>
+
+        <div class="sponsor-title" style="margin-top:20px;">Media Partner</div>
+        <div class="sponsor-flex">
+            <a href="https://web.ultra-soccer.jp/" target="_blank">
+                <img src="https://drive.google.com/thumbnail?id=1rwAfO1iS8hXyHZ8B1PR940xK55t2Xup4&sz=w600" class="media-logo" alt="Media Partner">
+            </a>
+        </div>
+    </div>
+
+    <footer>主催：株式会社ジャクパ<br>©️2026 JACPA TOKYO FC All Rights Reserved.</footer>
+</div>
+
+<div id="modal-overlay" onclick="closeModal()"></div>
+<div id="input-modal">
+    <h3 id="modal-title" style="margin-top:0;">認証</h3>
+    <div id="auth-section">
+        <p style="font-size:0.8rem; margin-bottom:10px;">パスワードを入力してください</p>
+        <input type="password" id="pass-field" style="width:80%; padding:10px; font-size:1.5rem; text-align:center; border:2px solid #ccc; border-radius:6px;" placeholder="PASS" inputmode="numeric">
+    </div>
+    <div id="score-section" style="display:none;">
+        <div id="team-h-label" style="font-weight:bold; color:var(--win); margin-bottom:5px; font-size:1.1rem;"></div>
+        <input type="number" id="score-h-field" style="width:60px; padding:10px; font-size:1.5rem; text-align:center; border:2px solid #ccc; border-radius:6px;" inputmode="numeric" placeholder="0">
+        <div style="margin:10px 0; font-weight:bold;">VS</div>
+        <div id="team-a-label" style="font-weight:bold; color:var(--lose); margin-bottom:5px; font-size:1.1rem;"></div>
+        <input type="number" id="score-a-field" style="width:60px; padding:10px; font-size:1.5rem; text-align:center; border:2px solid #ccc; border-radius:6px;" inputmode="numeric" placeholder="0">
+        <div id="pk-section" style="display:none; background:#f0f0f0; padding:10px; margin-top:15px; border-radius:6px;">
+            <small>PKスコア</small><br>
+            <input type="number" id="pk-h-field" style="width:45px; padding:5px; text-align:center;" placeholder="0"> - <input type="number" id="pk-a-field" style="width:45px; padding:5px; text-align:center;" placeholder="0">
+        </div>
+    </div>
+    <div style="margin-top:20px; display:flex; gap:10px;">
+        <button id="modal-submit-btn" onclick="submitModal()" style="flex:1; padding:12px; background:var(--primary); color:white; border:none; border-radius:6px; font-weight:bold; cursor:pointer;">確定</button>
+        <button onclick="closeModal()" style="flex:1; padding:12px; background:#888; color:white; border:none; border-radius:6px; cursor:pointer;">戻る</button>
+    </div>
+</div>
+
+<button id="admin-config-btn">⚙️</button>
+
+<script>
+// ============================================
+// GAS連携設定
+const API_URL = "https://script.google.com/macros/s/AKfycbzZ0jv5iLWpkf4edpRsKyrMKHI0VVjP2elQgLhLJ_Cea6pK5wCPtAsje3MuuivRq_xg/exec"; 
+// ============================================
+
+// ★スプレッドシートから取得するパスワードを格納する変数
+let serverPass = "";
+
+let tournamentName = "JACPA UNITY CUP";
+let tournamentMatches = {}; 
+
+function convertGD(url) { if (!url) return ""; const match = url.match(/\/d\/(.+?)\//); return match ? `https://drive.google.com/thumbnail?id=${match[1]}&sz=w200` : url; }
+
+function getSimpleTeamHtml(teamName) {
+    let logo = "";
+    for (let g in teamData) {
+        let found = teamData[g].find(t => t.n === teamName);
+        if (found && found.l) logo = convertGD(found.l);
+    }
+    const logoTag = logo ? `<img src="${logo}" class="club-logo" onerror="this.style.display='none'">` : "";
+    return `<div style="display:inline-flex; align-items:center; gap:3px;">${logoTag}<span>${teamName}</span></div>`;
+}
+
+let teamData = {
+    A: [{n:"JACPA東京", l:"https://drive.google.com/file/d/1Fb138_S8BEos4ElSCDaymcsSdg26ewWv/view"}, {n:"BOA SC", l:"https://drive.google.com/file/d/1AAdX_B47VQp9Y6t2cwM9cK48n1Lxg3Jx/view"}, {n:"東京ヴェルディ", l:"https://drive.google.com/file/d/1HmaJpsicR5nfXHBX0_Y2-UJmGXIXA3p5/view"}],
+    B: [{n:"ファナティコス", l:"https://drive.google.com/file/d/1wiv8H5kes-9hFTTmLt725lcpmJLR2M6p/view"}, {n:"カラーズ", l:"https://drive.google.com/file/d/1-hi8LoE_I7Ys6s81uLglqIO5KhgmKifK/view"}, {n:"川崎フロンターレ", l:"https://drive.google.com/file/d/18qasJeh4rFX8bIAuEexcZ_sL9fTLGNUe/view"}],
+    C: [{n:"浦和レッズ", l:"https://drive.google.com/file/d/1GIw1jWwVmVwKsmrxxflWrAk1iYTD6X-X/view"}, {n:"トリアネーロ町田", l:"https://drive.google.com/file/d/1bgY69n7Q7oxbcnjFLnHJ8VAF1jPgkjwe/view"}, {n:"バディーSC", l:"https://drive.google.com/file/d/1xTRMac-Sq6eDsQYJ0HFqFcE_iRbcS9qs/view"}],
+    D: [{n:"レイソルTOR", l:"https://drive.google.com/file/d/1x2mmzw7CTHbkd13E3bVL3qsV7UjvIyIA/view"}, {n:"レジスタFC", l:"https://drive.google.com/file/d/1CGupul1o_d9ih-qlDUkfW_eMwIcNpu_Q/view"}, {n:"水戸ホーリーホック", l:"https://drive.google.com/file/d/1qx7C4RO_K9hudvO5MRfP-Q1repmpGMNv/view"}]
+};
+
+let matches = [
+    {t:"9:00", p:"A", g:"A", h:0, a:1, sh:"", sa:""}, {t:"9:00", p:"B", g:"B", h:0, a:1, sh:"", sa:""},
+    {t:"9:40", p:"A", g:"C", h:0, a:1, sh:"", sa:""}, {t:"9:40", p:"B", g:"D", h:0, a:1, sh:"", sa:""},
+    {t:"10:20", p:"A", g:"A", h:0, a:2, sh:"", sa:""}, {t:"10:20", p:"B", g:"B", h:0, a:2, sh:"", sa:""},
+    {t:"11:00", p:"A", g:"C", h:0, a:2, sh:"", sa:""}, {t:"11:00", p:"B", g:"D", h:0, a:2, sh:"", sa:""},
+    {t:"11:40", p:"A", g:"A", h:1, a:2, sh:"", sa:""}, {t:"11:40", p:"B", g:"B", h:1, a:2, sh:"", sa:""},
+    {t:"12:20", p:"A", g:"C", h:1, a:2, sh:"", sa:""}, {t:"12:20", p:"B", g:"D", h:1, a:2, sh:"", sa:""}
+];
+
+let finalRanks = { A:[], B:[], C:[], D:[] }, tScores = {}, currentAction = "", currentIndex = null;
+
+function switchMap(mode) {
+    document.getElementById('btn-map-normal').classList.remove('active');
+    document.getElementById('btn-map-bus').classList.remove('active');
+    document.getElementById('map-normal').style.display = 'none';
+    document.getElementById('map-bus').style.display = 'none';
+
+    if (mode === 'normal') {
+        document.getElementById('btn-map-normal').classList.add('active');
+        document.getElementById('map-normal').style.display = 'block';
+    } else {
+        document.getElementById('btn-map-bus').classList.add('active');
+        document.getElementById('map-bus').style.display = 'block';
+    }
+}
+
+async function fetchData() {
+    if(!API_URL) {
+        document.getElementById('loading-mini').style.display='none';
+        return;
+    }
+    try {
+        const res = await fetch(API_URL + "?t=" + new Date().getTime());
+        const data = await res.json();
+        
+        serverPass = data.pass;
+        
+        data.scores.forEach(d => {
+            const id = String(d.id);
+            if(id.startsWith('t')) {
+                if(d.h !== "" || d.a !== "") {
+                    tScores[id] = {h:parseInt(d.h)||0, a:parseInt(d.a)||0, pkh:parseInt(d.pkh)||0, pka:parseInt(d.pka)||0};
+                }
+            } else {
+                const idx = parseInt(id);
+                if(d.h !== "" && d.a !== "") {
+                    matches[idx].sh = d.h;
+                    matches[idx].sa = d.a;
+                }
+            }
+        });
+        
+        calc();
+        updateSchedule();
+        
+        const qualDone = matches.some(m => m.sh !== ""); 
+        if(qualDone || Object.keys(tScores).length > 0) {
+            try { finaliseGroups(); } catch(e){}
+        }
+        if(Object.keys(tScores).length >= 6) {
+            try { decideFinals(); } catch(e){}
+        }
+        if(Object.keys(tScores).length >= 12) {
+            try { showRanking(); } catch(e){}
+        }
+
+        const loader = document.getElementById('loading-mini');
+        loader.style.opacity = '0';
+        setTimeout(() => { loader.style.display = 'none'; }, 400);
+
+    } catch(e) {
+        console.log("Fetch error:", e);
+        const loader = document.getElementById('loading-mini');
+        loader.style.backgroundColor = '#ffebee';
+        loader.style.color = '#c62828';
+        loader.innerHTML = '通信エラーが発生しました';
+        setTimeout(() => { loader.style.opacity = '0'; setTimeout(() => loader.style.display='none', 400); }, 3000);
+    }
+}
+
+async function sendData(id, h, a, pkh, pka) {
+    const btn = document.getElementById('modal-submit-btn');
+    btn.innerText = "送信中...";
+    btn.disabled = true;
+
+    try {
+        const payload = {
+            id: id,
+            h: h,
+            a: a,
+            pkh: pkh,
+            pka: pka
+        };
+        
+        await fetch(API_URL, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'text/plain',
+            },
+            body: JSON.stringify(payload)
+        });
+        
+        showToast("✅ 送信完了");
+        
+        if (currentAction === "score") {
+            matches[currentIndex].sh = h;
+            matches[currentIndex].sa = a;
+            calc();
+            updateSchedule();
+        } else {
+            tScores[currentIndex] = {h:parseInt(h), a:parseInt(a), pkh:parseInt(pkh), pka:parseInt(pka)};
+            document.getElementById('btn-'+currentIndex).innerText = `${h}-${a}${h===a?'('+pkh+'-'+pka+')':''}`;
+        }
+        closeModal();
+    } catch(e) {
+        alert("送信エラー: " + e);
+    } finally {
+        btn.innerText = "確定";
+        btn.disabled = false;
+    }
+}
+
+function showToast(msg) {
+    const t = document.getElementById('save-toast');
+    t.innerText = msg;
+    t.style.display = 'block'; t.style.opacity = '1';
+    setTimeout(() => { t.style.opacity = '0'; setTimeout(() => t.style.display = 'none', 300); }, 2500);
+}
+
+function switchView(mode) {
+    const containers = document.querySelectorAll('.league-table-wrap');
+    const btns = document.querySelectorAll('.view-btn:not(#btn-map-normal):not(#btn-map-bus)');
+    btns.forEach(b => b.classList.remove('active'));
+    if(mode === 'simple') {
+        containers.forEach(c => { c.classList.remove('table-detail'); c.classList.add('table-simple'); });
+        btns[0].classList.add('active');
+    } else {
+        containers.forEach(c => { c.classList.remove('table-simple'); c.classList.add('table-detail'); });
+        btns[1].classList.add('active');
+    }
+}
+
+function init() {
+    let h = "";
+    ['A','B','C','D'].forEach(g => {
+        h += `<div class="card league-table-wrap table-simple"><h3>Group ${g}</h3><table><tr><th class="rank-col">位</th><th class="team-name-col">チーム</th><th class="star-col">1</th><th class="star-col">2</th><th class="star-col">3</th><th class="stat-col">勝</th><th class="stat-col">負</th><th class="stat-col">分</th><th class="score-col">得</th><th class="score-col">失</th><th class="gd-cell">差</th><th class="pts-cell">点</th></tr>`;
+        teamData[g].forEach((team, i) => {
+            let logoSrc = convertGD(team.l);
+            let logoTag = logoSrc ? `<img src="${logoSrc}" class="club-logo" onerror="this.style.display='none'">` : "";
+            h += `<tr><td id="rank-${g}-${i}" class="rank-col">-</td><td class="team-name-col"><div class="team-cell-flex">${logoTag}${team.n}</div></td><td id="res-${g}-${i}-0" class="star-cell"></td><td id="res-${g}-${i}-1" class="star-cell"></td><td id="res-${g}-${i}-2" class="star-cell"></td><td id="w-${g}-${i}" class="stat-col">0</td><td id="l-${g}-${i}" class="stat-col">0</td><td id="d-${g}-${i}" class="stat-col">0</td><td id="gs-${g}-${i}" class="score-col">0</td><td id="ga-${g}-${i}" class="score-col">0</td><td id="gd-${g}-${i}" class="gd-cell">0</td><td id="pts-${g}-${i}" class="pts-cell">0</td></tr>`;
+        });
+        h += `</table></div>`;
+    });
+    document.getElementById('league-containers').innerHTML = h;
+    updateSchedule();
+    ['A','B','C','D'].forEach(g => { for(let i=0; i<3; i++) { let el=document.getElementById(`res-${g}-${i}-${i}`); if(el) el.style.background="#eee"; }});
+    
+    fetchData();
+}
+
+function updateSchedule() {
+    let htmlA = "<h3>Aコート</h3>", htmlB = "<h3>Bコート</h3>";
+    matches.forEach((m, i) => {
+        let sc = m.sh === "" ? "入力" : `<span class="win-s">${m.sh}-${m.sa}</span>`;
+        let row = `<div class="match-row"><div class="match-info"><div class="match-meta"><span>${m.t}</span><span>${m.g}組</span></div><div class="match-vs">${getSimpleTeamHtml(teamData[m.g][m.h].n)} <small>vs</small> ${getSimpleTeamHtml(teamData[m.g][m.a].n)}</div></div><button class="score-btn" onclick="openScoreModal(${i}, this)">${sc}</button></div>`;
+        if(m.p === "A") htmlA += row; else htmlB += row;
+    });
+    document.getElementById("schedule-A").innerHTML = htmlA; document.getElementById("schedule-B").innerHTML = htmlB;
+}
+
+function showModalAt(btn, modalId = 'input-modal') {
+    const modal = document.getElementById(modalId);
+    document.getElementById('modal-overlay').style.display="block";
+    modal.style.display="block";
+    const rect = btn.getBoundingClientRect();
+    const scrollTop = window.pageYOffset || document.documentElement.scrollTop;
+    let topPos = rect.bottom + scrollTop + 10;
+    if (rect.bottom > window.innerHeight - 200) {
+        topPos = rect.top + scrollTop - modal.offsetHeight - 10;
+    }
+    modal.style.top = topPos + "px";
+}
+
+function openScoreModal(i, btn) { currentAction = "score"; currentIndex = i; showAuth("スコア入力", btn); }
+function openAuthModal(a, btn) { currentAction = a; showAuth("認証", btn); }
+function openTScoreModal(id, btn) { currentAction = "t-score"; currentIndex = id; showAuth("スコア入力", btn); }
+
+function showAuth(title, btn) { 
+    document.getElementById('modal-title').innerText=title; 
+    document.getElementById('auth-section').style.display="block"; 
+    document.getElementById('score-section').style.display="none"; 
+    document.getElementById('pass-field').value=""; 
+    showModalAt(btn);
+}
+
+function closeModal() { 
+    document.getElementById('modal-overlay').style.display="none"; 
+    document.getElementById('input-modal').style.display="none"; 
+    if(document.activeElement) document.activeElement.blur();
+}
+
+function submitModal() {
+    if (document.getElementById('auth-section').style.display !== "none") {
+        
+        // ▼▼▼ パスワードのズレを吸収＆エラー原因をアラート表示 ▼▼▼
+        const inputPass = document.getElementById('pass-field').value.trim();
+        const correctPass = String(serverPass).trim();
+        
+        if (inputPass !== correctPass) { 
+            alert("PWエラー (入力: " + inputPass + " / 正解: " + correctPass + ")"); 
+            return; 
+        }
+        // ▲▲▲ 変更終了 ▲▲▲
+        
+        if (currentAction === 'reflect') { finaliseGroups(); closeModal(); return; }
+        if (currentAction === 'final') { decideFinals(); closeModal(); return; }
+        if (currentAction === 'ranking') { showRanking(); closeModal(); return; }
+        
+        document.getElementById('auth-section').style.display="none"; document.getElementById('score-section').style.display="block";
+        
+        if (currentAction === "score") {
+            const m = matches[currentIndex];
+            document.getElementById('team-h-label').innerText = teamData[m.g][m.h].n;
+            document.getElementById('team-a-label').innerText = teamData[m.g][m.a].n;
+            document.getElementById('pk-section').style.display = "none";
+            document.getElementById('score-h-field').value = m.sh;
+            document.getElementById('score-a-field').value = m.sa;
+        } else if (currentAction === "t-score") {
+            const tMatch = tournamentMatches[currentIndex];
+            if(tMatch) {
+                document.getElementById('team-h-label').innerText = tMatch.h;
+                document.getElementById('team-a-label').innerText = tMatch.a;
+                document.getElementById('pk-section').style.display = "block";
+                const s = tScores[currentIndex] || {h:"", a:"", pkh:"", pka:""};
+                document.getElementById('score-h-field').value = s.h;
+                document.getElementById('score-a-field').value = s.a;
+                document.getElementById('pk-h-field').value = s.pkh;
+                document.getElementById('pk-a-field').value = s.pka;
+            }
+        }
+    } else {
+        const h = document.getElementById('score-h-field').value, a = document.getElementById('score-a-field').value;
+        if (h===""||a==="") { alert("スコアを入力してください"); return; }
+        
+        const pkh = document.getElementById('pk-h-field').value;
+        const pka = document.getElementById('pk-a-field').value;
+        sendData(currentIndex, h, a, pkh, pka);
+    }
+}
+
+function calc() {
+    const res = {}; ['A','B','C','D'].forEach(g => { res[g] = teamData[g].map((t, idx) => ({ id: idx, w:0, l:0, d:0, gs:0, ga:0, pts:0, gd:0, r:["","",""] })); });
+    matches.forEach(m => { if(m.sh!=="") { 
+        const h=parseInt(m.sh), a=parseInt(m.sa); res[m.g][m.h].gs+=h; res[m.g][m.h].ga+=a; res[m.g][m.a].gs+=a; res[m.g][m.a].ga+=h;
+        if(h>a){ res[m.g][m.h].w++; res[m.g][m.h].pts+=3; res[m.g][m.a].l++; res[m.g][m.h].r[m.a]=`○${h}-${a}`; res[m.g][m.a].r[m.h]=`×${a}-${h}`; }
+        else if(h<a){ res[m.g][m.a].w++; res[m.g][m.a].pts+=3; res[m.g][m.h].l++; res[m.g][m.a].r[m.h]=`○${a}-${h}`; res[m.g][m.h].r[m.a]=`×${h}-${a}`; }
+        else { res[m.g][m.h].d++; res[m.g][m.a].d++; res[m.g][m.h].pts+=1; res[m.g][m.a].pts+=1; res[m.g][m.h].r[m.a]=`△${h}-${a}`; res[m.g][m.a].r[m.h]=`△${a}-${h}`; }
+    }});
+    ['A','B','C','D'].forEach(g => {
+        let sorted = [...res[g]].sort((a,b) => (b.pts - a.pts) || ((b.gs-b.ga) - (a.gs-a.ga)) || (b.gs - a.gs));
+        finalRanks[g] = sorted.map(t => teamData[g][t.id].n);
+        res[g].forEach((s, i) => {
+            let r = sorted.findIndex(t => t.id === i) + 1;
+            document.getElementById(`rank-${g}-${i}`).innerText = r===1?"🥇":r;
+            document.getElementById(`w-${g}-${i}`).innerText=s.w; document.getElementById(`l-${g}-${i}`).innerText=s.l; document.getElementById(`d-${g}-${i}`).innerText=s.d;
+            document.getElementById(`gs-${g}-${i}`).innerText = s.gs; document.getElementById(`ga-${g}-${i}`).innerText = s.ga;
+            document.getElementById(`gd-${g}-${i}`).innerText = s.gs - s.ga; document.getElementById(`pts-${g}-${i}`).innerText = s.pts;
+            for(let j=0; j<3; j++) if(i!==j) { let cell=document.getElementById(`res-${g}-${i}-${j}`); if(cell) cell.innerHTML=`<span class="${s.r[j].includes('○')?'win-s':s.r[j].includes('×')?'lose-s':'draw-s'}">${s.r[j]}</span>`; }
+        });
+    });
+}
+
+function finaliseGroups() {
+    document.getElementById('btn-decide-final').style.display='block';
+    let h = "";
+    const tData = [
+        {id:"7", t:"13:10", aid:"t7a", bid:"t7b", at1:`A3位`, at2:`B3位`, bt1:`C3位`, bt2:`D3位`, an1:finalRanks.A[2], an2:finalRanks.B[2], bn1:finalRanks.C[2], bn2:finalRanks.D[2], label:"3位パート順位決定戦"},
+        {id:"8", t:"13:50", aid:"t8a", bid:"t8b", at1:`A2位`, at2:`B2位`, bt1:`C2位`, bt2:`D2位`, an1:finalRanks.A[1], an2:finalRanks.B[1], bn1:finalRanks.C[1], bn2:finalRanks.D[1], label:"2位パート順位決定戦"},
+        {id:"9", t:"14:30", aid:"t9a", bid:"t9b", at1:`A1位`, at2:`B1位`, bt1:`C1位`, bt2:`D1位`, an1:finalRanks.A[0], an2:finalRanks.B[0], bn1:finalRanks.C[0], bn2:finalRanks.D[0], label:"1位パート順位決定戦"}
+    ];
+    tData.forEach(d => {
+        if(!tournamentMatches[d.aid]) tournamentMatches[d.aid] = { h: d.an1, a: d.an2 };
+        if(!tournamentMatches[d.bid]) tournamentMatches[d.bid] = { h: d.bn1, a: d.bn2 };
+        h += `<div style="background:#f9f9f9; padding:8px; font-weight:bold; border-bottom:1px solid #ddd; font-size:0.8rem;">${d.label} (${d.t})</div>`;
+        h += `<div class="match-row"><div class="match-info"><span>Aコート</span><br><div class="match-vs"><span class="match-label">${d.at1}</span>${getSimpleTeamHtml(tournamentMatches[d.aid].h)} <small>vs</small> <span class="match-label">${d.at2}</span>${getSimpleTeamHtml(tournamentMatches[d.aid].a)}</div></div><button class="score-btn" id="btn-${d.aid}" onclick="openTScoreModal('${d.aid}', this)">${getBtnText(d.aid)}</button></div>`;
+        h += `<div class="match-row"><div class="match-info"><span>Bコート</span><br><div class="match-vs"><span class="match-label">${d.bt1}</span>${getSimpleTeamHtml(tournamentMatches[d.bid].h)} <small>vs</small> <span class="match-label">${d.bt2}</span>${getSimpleTeamHtml(tournamentMatches[d.bid].a)}</div></div><button class="score-btn" id="btn-${d.bid}" onclick="openTScoreModal('${d.bid}', this)">${getBtnText(d.bid)}</button></div>`;
+    });
+    h += `<div id="final-cards-area"></div>`;
+    document.getElementById('schedule-tourn').innerHTML = h;
+}
+
+function decideFinals() {
+    let h = "";
+    const rounds = [
+        {id:"10", t:"15:10", prev:"7", aid:"t10a", bid:"t10b", title:"3位パート最終戦", labelA:"9位決定戦", labelB:"11位決定戦"},
+        {id:"11", t:"15:50", prev:"8", aid:"t11a", bid:"t11b", title:"2位パート最終戦", labelA:"5位決定戦", labelB:"7位決定戦"},
+        {id:"12", t:"16:30", prev:"9", aid:"t12a", bid:"t12b", title:"決勝・3決位決定戦", labelA:"決勝戦", labelB:"3位決定戦"}
+    ];
+    rounds.forEach(r => {
+        const sA = tScores["t"+r.prev+"a"], sB = tScores["t"+r.prev+"b"];
+        if(sA && sB) {
+            const teamA = tournamentMatches["t"+r.prev+"a"];
+            const teamB = tournamentMatches["t"+r.prev+"b"];
+            let wA = (sA.h > sA.a || (sA.h === sA.a && sA.pkh > sA.pka)) ? teamA.h : teamA.a;
+            let lA = (wA === teamA.h) ? teamA.a : teamA.h;
+            let wB = (sB.h > sB.a || (sB.h === sB.a && sB.pkh > sB.pka)) ? teamB.h : teamB.a;
+            let lB = (wB === teamB.h) ? teamB.a : teamB.h;
+
+            if(!tournamentMatches[r.aid]) tournamentMatches[r.aid] = { h: wA, a: wB };
+            if(!tournamentMatches[r.bid]) tournamentMatches[r.bid] = { h: lA, a: lB };
+
+            h += `<div style="background:#333; color:white; padding:8px; font-weight:bold; font-size:0.8rem; margin-top:10px;">${r.title} (${r.t})</div>`;
+            h += `<div class="match-row" style="background:#fff9c4;"><div class="match-info"><span style="font-weight:bold; color:#1a237e;">Aコート</span><br><span>${r.labelA}</span><div class="match-vs">${getSimpleTeamHtml(tournamentMatches[r.aid].h)} <small>vs</small> ${getSimpleTeamHtml(tournamentMatches[r.aid].a)}</div></div><button class="score-btn" id="btn-${r.aid}" onclick="openTScoreModal('${r.aid}', this)">${getBtnText(r.aid)}</button></div>`;
+            h += `<div class="match-row" style="background:#f1f8e9;"><div class="match-info"><span style="font-weight:bold; color:#1a237e;">Bコート</span><br><span>${r.labelB}</span><div class="match-vs">${getSimpleTeamHtml(tournamentMatches[r.bid].h)} <small>vs</small> ${getSimpleTeamHtml(tournamentMatches[r.bid].a)}</div></div><button class="score-btn" id="btn-${r.bid}" onclick="openTScoreModal('${r.bid}', this)">${getBtnText(r.bid)}</button></div>`;
+        }
+    });
+    document.getElementById('final-cards-area').innerHTML = h;
+    document.getElementById('btn-show-rank').style.display = 'block'; 
+}
+
+function getBtnText(id) {
+    const s = tScores[id];
+    if(s) return `${s.h}-${s.a}${s.h===s.a?'('+s.pkh+'-'+s.pka+')':''}`;
+    return "入力";
+}
+
+function showRanking() {
+    const getWinner = (mid) => {
+        const s = tScores[mid], m = tournamentMatches[mid];
+        if(!s || !m) return "---";
+        return (s.h > s.a || (s.h === s.a && s.pkh > s.pka)) ? m.h : m.a;
+    };
+    const getLoser = (mid) => {
+        const s = tScores[mid], m = tournamentMatches[mid];
+        if(!s || !m) return "---";
+        return (s.h > s.a || (s.h === s.a && s.pkh > s.pka)) ? m.a : m.h;
+    };
+    const ranks = [
+        {r:1, t:getWinner('t12a')}, {r:2, t:getLoser('t12a')}, {r:3, t:getWinner('t12b')}, {r:4, t:getLoser('t12b')},
+        {r:5, t:getWinner('t11a')}, {r:6, t:getLoser('t11a')}, {r:7, t:getWinner('t11b')}, {r:8, t:getLoser('t11b')},
+        {r:9, t:getWinner('t10a')}, {r:10, t:getLoser('t10a')}, {r:11, t:getWinner('t10b')}, {r:12, t:getLoser('t10b')}
+    ];
+    let h = "";
+    ranks.forEach(d => { h += `<div class="final-rank-row"><div class="rank-num">${d.r}位</div><div class="rank-name">${getSimpleTeamHtml(d.t)}</div></div>`; });
+    document.getElementById('final-rank-card').innerHTML = h;
+    document.getElementById('final-rank-card').style.display = 'block';
+    document.getElementById('final-rank-title').style.display = 'block';
+    showToast("最終順位を更新しました");
+}
+
+init();
+</script>
+</body>
+</html>
